@@ -1,12 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const TodoModel = require("../models/TodoModel");
+const authHandler = require("../middlewares/authHandler");
 
 
 // List all the todos
 async function listTodos(req, res, next) {
     try {
-        const todoList = await TodoModel.find();
+        const todoList = await TodoModel.find({ user: req.auth.id });
         res.json(todoList);
     } catch (e) {
         console.log(e);
@@ -22,6 +23,7 @@ async function createTodo(req, res, next) {
     }
 
     let newTodo = req.body;
+    newTodo.user = req.auth.id;
     try {
         const todo = await TodoModel.create(newTodo);
         res.json(todo);
@@ -33,7 +35,6 @@ async function createTodo(req, res, next) {
 
 // Update an existing todo in the list
 async function updateTodo(req, res, next) {
-
     const todoId = req.params.id;
     if (!todoId) {
         res.status(400).json({ "message": "Id is required." });
@@ -70,8 +71,8 @@ async function deleteTodo(req, res, next) {
 
 
 
-router.get("/", listTodos);
-router.post("/", createTodo);
-router.put("/:id", updateTodo);
-router.delete("/:id", deleteTodo);
+router.get("/", authHandler.isUser, listTodos);
+router.post("/", authHandler.isUser, createTodo);
+router.put("/:id", authHandler.isUser, updateTodo);
+router.delete("/:id", authHandler.isUser, deleteTodo);
 module.exports = router;

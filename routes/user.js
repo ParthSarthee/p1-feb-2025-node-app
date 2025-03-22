@@ -1,81 +1,52 @@
 const express = require("express");
 const router = express.Router();
 const UserModel = require("../models/UserModel");
-
+const jwt = require("jsonwebtoken");
+const secret = "test-test-test-test-test-test-test";
 
 async function listUsers(req, res, next) {
-    const filter = req.query;
-
     try {
-        const users = await UserModel.find(filter);
-        res.json({ users: users });
+        const users = await UserModel.find();
+        res.json(users);
     } catch (e) {
-        return next(e);
-    }
-}
-
-async function oneUserId(req, res, next) {
-    const uid = req.params.uid;
-
-    try {
-        const user = await UserModel.findById(uid);
-        res.json({ user: user });
-    } catch (e) {
-        return next(e);
-    }
-}
-
-async function oneUserFilter(req, res, next) {
-    const filter = req.query;
-    try {
-        const user = await UserModel.findOne(filter);
-        res.json({ user: user });
-    } catch (e) {
-        return next(e);
-    }
-}
-
-
-async function createUser(req, res, next) {
-    const data = req.body;
-
-    try {
-        const user = await UserModel.create(data);
-        res.json({ user: user });
-    } catch (e) {
-        return next(e);
-    }
-}
-
-async function updateUser(req, res, next) {
-    const uid = req.params.uid;
-    const data = req.body;
-
-    try {
-        const updatedUser = await UserModel.findByIdAndUpdate(uid, data, { new: true });
-        res.json({ user: updatedUser });
-    } catch (e) {
-        return next(e);
-    }
-}
-
-
-async function deleteUser(req, res, next) {
-    const uid = req.params.uid;
-    try {
-        const deletedUser = await UserModel.findByIdAndDelete(uid);
-        res.json({ user: deletedUser });
-    } catch (e) {
-        return next(e);
+        console.log(e);
+        res.status(500).json({ message: "Something went wrong when fetching users." });
     }
 }
 
 
 
-router.get("/list", listUsers);
-router.get("/one/id/:uid", oneUserId);
-router.get("/one/filter", oneUserFilter);
-router.post("/", createUser);
-router.put("/:uid", updateUser);
-router.delete("/:uid", deleteUser);
+async function login(req, res, next) {
+    const loginData = { username: req.body.username, password: req.body.password };
+
+    try {
+        const user = await UserModel.findOne(loginData);
+        if (user) {
+            const token = jwt.sign({ username: user.username, id: user._id }, secret);
+            res.json({ user: user, token: token });
+        }
+        else res.status(404).json({ message: "Wrong username or password." });
+    } catch (e) {
+        console.log(e);
+        res.status(500).json({ message: "Something went wrong when logging in." });
+    }
+}
+
+async function signup(req, res, next) {
+    const userData = { name: req.body.name, username: req.body.username, password: req.body.password };
+
+    try {
+        const user = await UserModel.create(userData);
+        const token = jwt.sign({ username: user.username, id: user._id }, secret);
+        res.json({ user: user, token: token });
+    } catch (e) {
+        console.log(e);
+        res.status(500).json({ message: "Something went wrong when creating new user." });
+    }
+}
+
+
+router.get("/", listUsers);
+router.post("/login", login);
+router.post("/signup", signup);
 module.exports = router;
