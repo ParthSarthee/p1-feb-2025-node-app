@@ -9,7 +9,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
-mongoose.connect("mongodb+srv://admin:nSovxzqVW03jU9Mg@main.7cyia.mongodb.net/todo_main?retryWrites=true&w=majority&appName=Main");
+mongoose.connect("mongodb+srv://admin:pQIk3kohQgfkMsy7@main.qpskldb.mongodb.net/TodoDB?retryWrites=true&w=majority&appName=Main");
 
 // Models => Todo, User
 // Model Based Routes => /todo, /user
